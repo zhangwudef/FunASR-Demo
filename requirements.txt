@@ -1,0 +1,10 @@
+funasr
+sounddevice
+numpy
+torch
+torchaudio --index-url https://download.pytorch.org/whl/cu121
+pydub
+python-dotenv
+tqdm
+gradio>=5.0
+python-docx
