@@ -4,7 +4,7 @@
 - 麦克风实时录音 + 说话人自动区分（A/B/C）
 - 中文语音转写（FunASR SenseVoice + cam++）
 - 生成带时间戳的结构化笔录
-- 全离线部署，适合公安/政务场景
+- 全离线部署
 
 ## 新增功能
 - **Gradio 实时 Web UI**：`python gradio_app.py`
@@ -32,4 +32,4 @@ docker build -t funasr-demo .
 docker run -p 7860:7860 --gpus all funasr-demo
 ```
 
-公安项目基础完善，可快速迭代。
+
