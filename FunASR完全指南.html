@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FunASR 完全指南</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-secondary: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #79c0ff;
+    --green: #3fb950;
+    --orange: #d2991d;
+    --red: #f85149;
+    --purple: #a371f7;
+    --code-bg: #1c2128;
+    --inline-code: #343941;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 280px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 16px;
+    z-index: 10;
+  }
+  nav h2 {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  nav a {
+    display: block;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  nav a:hover { color: var(--text); background: var(--bg-tertiary); }
+  nav a.active { color: var(--accent); }
+  nav .sub { padding-left: 18px; font-size: 12px; }
+  main {
+    margin-left: 280px;
+    max-width: 900px;
+    padding: 48px 64px 80px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+  .meta {
+    display: flex; gap: 16px; margin-bottom: 40px; flex-wrap: wrap;
+  }
+  .meta-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 14px; font-size: 13px;
+  }
+  .meta-tag .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot.green { background: var(--green); }
+  .dot.orange { background: var(--orange); }
+  .dot.purple { background: var(--purple); }
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: #f0f6fc;
+  }
+  h3 {
+    font-size: 19px;
+    font-weight: 600;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    color: #e6edf3;
+  }
+  h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    color: #d0d7de;
+  }
+  p { margin-bottom: 14px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  strong { color: #f0f6fc; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: left;
+  }
+  th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: #e6edf3;
+    white-space: nowrap;
+  }
+  td { background: var(--bg-secondary); vertical-align: top; }
+  tr:hover td { background: var(--bg-tertiary); }
+  code {
+    font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, monospace;
+    font-size: 13px;
+  }
+  :not(pre) > code {
+    background: var(--inline-code);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent2);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 16px 0 24px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; color: var(--text); }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 8px 16px;
+    margin: 16px 0;
+    background: var(--bg-secondary);
+    border-radius: 0 6px 6px 0;
+    color: var(--text-secondary);
+  }
+  blockquote strong { color: var(--text); }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.green { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge.blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .badge.orange { background: rgba(210,153,29,0.15); color: var(--orange); }
+  .badge.red { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge.purple { background: rgba(163,113,247,0.15); color: var(--purple); }
+  .card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0 24px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #e6edf3;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 12px 0;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .flow {
+    text-align: center;
+    font-family: monospace;
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 2;
+    white-space: pre;
+  }
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <h2>导航</h2>
+  <a href="#ch1">第一章 · 项目定位</a>
+  <a href="#ch2">第二章 · 技术栈拆解</a>
+  <a href="#ch2-1" class="sub">2.1 技术分层</a>
+  <a href="#ch2-2" class="sub">2.2 模型矩阵</a>
+  <a href="#ch3">第三章 · 统一调度</a>
+  <a href="#ch4">第四章 · 部署形态</a>
+  <a href="#ch5">第五章 · 应用领域</a>
+  <a href="#ch6">第六章 · 竞品对比</a>
+  <a href="#ch7">第七章 · 入门路径</a>
+  <a href="#ch8">第八章 · .github 解析</a>
+  <a href="#ch8-0" class="sub">8.0 目录总览</a>
+  <a href="#ch8-1" class="sub">8.1 update-api-docs.yml</a>
+  <a href="#ch8-2" class="sub">8.2 config.yaml</a>
+  <a href="#ch8-3" class="sub">8.3 ask_questions.md</a>
+  <a href="#ch8-4" class="sub">8.4 bug_report.md</a>
+  <a href="#ch8-5" class="sub">8.5 deployment_help.md</a>
+  <a href="#ch8-6" class="sub">8.6 error_docs.md</a>
+  <a href="#ch8-7" class="sub">8.7 feature_request.md</a>
+  <a href="#ch8-8" class="sub">8.8 migration_benchmark.md</a>
+  <a href="#ch8-9" class="sub">8.9 showcase.md</a>
+  <a href="#ch8-10" class="sub">8.10 PR模板</a>
+  <a href="#appendix">附录 · 协作关系</a>
+</nav>
+
+<main>
+
+<h1>FunASR 完全指南</h1>
+<p class="subtitle">
+  阿里巴巴达摩院 · 工业级语音识别全栈工具包<br>
+  GitHub: <a href="https://github.com/modelscope/FunASR">github.com/modelscope/FunASR</a>
+</p>
+
+<div class="meta">
+  <span class="meta-tag"><span class="dot green"></span> 17,900+ Stars</span>
+  <span class="meta-tag">MIT License</span>
+  <span class="meta-tag">170x 实时推理</span>
+  <span class="meta-tag">50+ 语言</span>
+  <span class="meta-tag">INTERSPEECH 2023</span>
+</div>
+
+<!-- ============ 第一章 ============ -->
+<h2 id="ch1">第一章 · 项目定位</h2>
+
+<h3>一句话定义</h3>
+<p>FunASR 是阿里巴巴达摩院开源的端到端语音识别（ASR）工具包，由 ModelScope 社区维护，核心目标是让开发者用<strong>一行代码</strong>完成"语音转文字 + 说话人分离 + 情感识别 + 标点添加"的全套流程。</p>
+<p>2023 年发表在语音顶会 INTERSPEECH，是目前中文开源 ASR 领域影响力最大的项目之一。</p>
+
+<h3>核心数据速览</h3>
+<table>
+  <tr><th>指标</th><th>数值</th><th>意味着什么</th></tr>
+  <tr><td>推理速度</td><td><strong>170x 实时</strong>（GPU）</td><td>1 小时的音频 21 秒处理完</td></tr>
+  <tr><td>CPU 速度</td><td><strong>17x 实时</strong></td><td>CPU 上跑得比 Whisper 的 GPU 还快</td></tr>
+  <tr><td>语言覆盖</td><td>50+</td><td>含中/英/日/韩/粤语及方言</td></tr>
+  <tr><td>模型参数</td><td>0.4M ~ 1.7B</td><td>从轻量 VAD 到 LLM 级大模型全覆盖</td></tr>
+  <tr><td>开源协议</td><td>MIT</td><td>商用无限制</td></tr>
+</table>
+
+<!-- ============ 第二章 ============ -->
+<h2 id="ch2">第二章 · 技术栈深度拆解</h2>
+
+<h3 id="ch2-1">2.1 整体技术分层</h3>
+
+<div class="flow">┌─────────────────────────────────────────────────┐
+│           应用层 (API / CLI / MCP)               │
+│  funasr-server / OpenAI API / Gradio / Docker     │
+├─────────────────────────────────────────────────┤
+│           推理加速层                              │
+│  vLLM 推理引擎 (2-3x 加速) / Torch 原生推理       │
+├─────────────────────────────────────────────────┤
+│           模型层 (Model Zoo)                     │
+│  ┌──────────┬──────────┬──────────┬──────────┐  │
+│  │ ASR 模型 │ VAD 模型 │ 标点模型 │ 说话人   │  │
+│  │SenseVoice│ fsmn-vad │ ct-punc  │  cam++   │  │
+│  │Paraformer│          │          │          │  │
+│  │Fun-Nano  │          │          │          │  │
+│  └──────────┴──────────┴──────────┴──────────┘  │
+├─────────────────────────────────────────────────┤
+│           统一调度层 (AutoModel)                 │
+│  一行代码串联：VAD→ASR→标点→说话人              │
+├─────────────────────────────────────────────────┤
+│           基础设施                                │
+│  PyTorch / torchaudio / ModelScope Hub / HF Hub │
+└─────────────────────────────────────────────────┘</div>
+
+<h3 id="ch2-2">2.2 核心模型矩阵详解</h3>
+
+<h4>（1）ASR（语音识别）模型</h4>
+<table>
+  <tr><th>模型</th><th>架构思想</th><th>参数量</th><th>语言</th><th>速度(GPU)</th><th>独特能力</th></tr>
+  <tr><td><strong>SenseVoiceSmall</strong></td><td>非自回归 CTC + 情感头</td><td>234M</td><td>中/英/日/韩/粤</td><td>170x</td><td>情感识别 + 音频事件检测</td></tr>
+  <tr><td><strong>Paraformer-Large</strong></td><td>非自回归 Transformer</td><td>220M</td><td>中/英</td><td>120x</td><td>高精度中文生产级 ASR</td></tr>
+  <tr><td><strong>Fun-ASR-Nano</strong></td><td>LLM-based (SenseVoice + Qwen3-0.6B)</td><td>800M</td><td>31 语言</td><td>17x</td><td>最高精度，LLM 驱动</td></tr>
+  <tr><td><strong>Qwen3-ASR</strong></td><td>Qwen3 架构</td><td>0.6B/1.7B</td><td>52 语言</td><td>—</td><td>最广语言覆盖</td></tr>
+  <tr><td><strong>GLM-ASR-Nano</strong></td><td>GLM 架构</td><td>1.5B</td><td>17 语言</td><td>—</td><td>方言支持</td></tr>
+  <tr><td>Whisper-large-v3</td><td>自回归 Encoder-Decoder</td><td>1550M</td><td>多语言</td><td>13x</td><td>翻译 + ASR</td></tr>
+  <tr><td>Whisper-large-v3-turbo</td><td>自回归 Encoder-Decoder</td><td>809M</td><td>多语言</td><td>46x</td><td>翻译 + ASR（加速版）</td></tr>
+</table>
+
+<p><strong>关键概念——「非自回归」vs「自回归」</strong>：</p>
+<ul>
+  <li><strong>非自回归（Paraformer / SenseVoice）</strong>：一次性并行输出整句文字，速度极快（120-170x 实时），适合生产环境</li>
+  <li><strong>自回归（Fun-ASR-Nano / Whisper）</strong>：逐 token 生成，慢但精度更高，适合对准确率有极致要求的场景</li>
+</ul>
+
+<h4>（2）VAD（语音活动检测）</h4>
+<p><code>fsmn-vad</code>：仅 <strong>0.4M 参数</strong>的轻量模型，负责把一段长音频切成有语音的片段。</p>
+<p><strong>为什么需要 VAD？</strong>——真实录音里大量时间是沉默、背景噪音。VAD 把"有人说话的部分"切出来，只把有效片段送给 ASR 模型，大幅节省算力。</p>
+<p>最新版本引入了<strong>动态 VAD</strong>（Dynamic VAD），自适应静音阈值：短句保持完整不被切断，长段自动按语义拆分。</p>
+
+<h4>（3）标点恢复模型</h4>
+<p><code>ct-punc</code>：290M 参数，基于 Transformer。ASR 输出的原始文字是连续的（"我们讨论一下三季度计划好的我有三点意见请说我们有半小时"），标点模型自动加回标点（"我们讨论一下三季度计划。好的，我有三点意见。请说，我们有半小时。"）。</p>
+
+<h4>（4）说话人分离</h4>
+<p><code>cam++</code>：7.2M 参数，基于说话人声纹嵌入。解决"谁在说话"的问题——会议录音里 5 个人轮流发言，cam++ 自动给每句话打上 Speaker 0 / Speaker 1 / … 标签。</p>
+
+<h4>（5）情感识别</h4>
+<p><code>emotion2vec+large</code>：300M 参数，从语音中识别情感标签（开心/悲伤/愤怒/中性），粒度可配到 utterance 级别（单句话的情感）。</p>
+
+<!-- ============ 第三章 ============ -->
+<h2 id="ch3">第三章 · 统一调度机制——为什么说"一行代码"</h2>
+
+<p>这是 FunASR 最精妙的设计。传统 ASR 流程需要开发者手动串联多个模型：</p>
+<div class="flow">音频 → VAD 切分 → ASR 识别 → 标点恢复 → 说话人标注 → 结果</div>
+
+<p>FunASR 的 <code>AutoModel</code> 自动完成整条链路：</p>
+
+<pre><code>from funasr import AutoModel
+
+model = AutoModel(
+    model="paraformer-zh",      # ASR 模型
+    vad_model="fsmn-vad",       # 语音活动检测
+    punc_model="ct-punc",       # 标点恢复
+    spk_model="cam++",          # 说话人分离
+    device="cuda"
+)
+result = model.generate(input="meeting.wav")</code></pre>
+
+<p><strong>背后发生了什么：</strong></p>
+<ol>
+  <li><code>fsmn-vad</code> 扫描音频，找到所有有人声的片段</li>
+  <li>每个片段送 <code>paraformer-zh</code> 做语音转文字</li>
+  <li><code>ct-punc</code> 给输出文字加标点</li>
+  <li><code>cam++</code> 对每个片段的声纹做聚类，打上 Speaker ID</li>
+  <li>最终合并输出带时间戳 + 说话人 + 标点的结构化文本</li>
+</ol>
+
+<h3>输出示例</h3>
+<pre><code>[00:00.4 → 00:03.8]  Speaker 0: 我们讨论一下三季度计划。
+[00:04.2 → 00:07.1]  Speaker 1: 好的，我有三点意见。
+[00:07.5 → 00:12.3]  Speaker 0: 请说，我们有半小时。</code></pre>
+
+<!-- ============ 第四章 ============ -->
+<h2 id="ch4">第四章 · 部署形态——从单机到云端</h2>
+
+<table>
+  <tr><th>部署方式</th><th>适用场景</th><th>技术选型</th></tr>
+  <tr><td><strong>Python API</strong></td><td>开发/研究</td><td><code>pip install funasr</code></td></tr>
+  <tr><td><strong>CLI 命令行</strong></td><td>快速批量处理</td><td><code>funasr *.wav --output-format srt</code></td></tr>
+  <tr><td><strong>OpenAI 兼容 API</strong></td><td>生产服务/Agent 集成</td><td><code>funasr-server --device cuda</code></td></tr>
+  <tr><td><strong>WebSocket 流式</strong></td><td>实时语音转写</td><td>Docker 镜像</td></tr>
+  <tr><td><strong>Docker</strong></td><td>容器化部署</td><td>官方镜像，CPU/GPU 两个版本</td></tr>
+  <tr><td><strong>vLLM 加速</strong></td><td>高吞吐推理</td><td>2-3x 解码加速</td></tr>
+  <tr><td><strong>MCP Server</strong></td><td>AI Agent 工具链</td><td>Claude/Cursor 直接调用</td></tr>
+  <tr><td><strong>Android</strong></td><td>端侧推理</td><td>移动端 SDK</td></tr>
+  <tr><td><strong>Gradio Web UI</strong></td><td>演示/测试</td><td>浏览器直接上传音频</td></tr>
+</table>
+
+<h3>OpenAI 兼容 API 的价值</h3>
+<p>这是一个关键设计选择：API 格式<strong>完全兼容 OpenAI 的 <code>/v1/audio/transcriptions</code></strong> 端点。</p>
+<ul>
+  <li>LangChain / Dify / AutoGen / Coze 等 Agent 框架可以<strong>零改动</strong>接入</li>
+  <li>任何现有使用 OpenAI Whisper API 的应用，只需把 URL 改成 <code>localhost:8000</code> 即可切换</li>
+  <li>Postman / curl / JavaScript SDK 等现成工具直接可用</li>
+</ul>
+
+<pre><code># 启动服务
+funasr-server --device cuda
+
+# 调用（和 OpenAI 完全一致的格式）
+curl http://localhost:8000/v1/audio/transcriptions \
+  -F file=@sample.wav \
+  -F model=sensevoice \
+  -F response_format=verbose_json</code></pre>
+
+<!-- ============ 第五章 ============ -->
+<h2 id="ch5">第五章 · 应用领域全景图</h2>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">会议纪要自动化</div>
+    <p>Paraformer + cam++ + VAD + ct-punc<br>会议录音 → 带发言人标注的纪要 → LLM 摘要</p>
+    <span class="badge blue">说话人分离内置</span>
+  </div>
+  <div class="card">
+    <div class="card-title">呼叫中心质检</div>
+    <p>SenseVoice + emtion2vec<br>客服通话 → 情绪波动检测 → 话术合规分析</p>
+    <span class="badge orange">情感识别内置</span>
+  </div>
+  <div class="card">
+    <div class="card-title">视频字幕生成</div>
+    <p>SenseVoice → 标准 SRT 字幕<br>1小时视频仅需 21 秒处理</p>
+    <span class="badge green">170x 实时</span>
+  </div>
+  <div class="card">
+    <div class="card-title">实时语音转写</div>
+    <p>Paraformer-streaming + WebSocket<br>直播字幕 / 同传场景</p>
+    <span class="badge purple">毫秒级延迟</span>
+  </div>
+  <div class="card">
+    <div class="card-title">多语言翻译前处理</div>
+    <p>Fun-ASR-Nano (31语言) / Qwen3-ASR (52语言)<br>先转写 → 再机器翻译</p>
+    <span class="badge blue">52 语言支持</span>
+  </div>
+  <div class="card">
+    <div class="card-title">AI Agent 语音交互</div>
+    <p>MCP Server + OpenAI API<br>LLM + 语音输入 → 执行操作</p>
+    <span class="badge purple">Agent 原生</span>
+  </div>
+  <div class="card">
+    <div class="card-title">教育/口语学习</div>
+    <p>SenseVoice + 情感识别<br>发音打分 / 流利度评估</p>
+    <span class="badge green">情感 + 精度</span>
+  </div>
+  <div class="card">
+    <div class="card-title">法律/医疗转录</div>
+    <p>Paraformer + hotword 热词增强<br>领域术语精准识别</p>
+    <span class="badge orange">热词定制</span>
+  </div>
+</div>
+
+<!-- ============ 第六章 ============ -->
+<h2 id="ch6">第六章 · 与竞品的对比分析</h2>
+
+<h3>FunASR vs OpenAI Whisper</h3>
+<table>
+  <tr><th>维度</th><th>FunASR</th><th>Whisper</th></tr>
+  <tr><td>架构</td><td>非自回归（Paraformer/SenseVoice）</td><td>自回归 Encoder-Decoder</td></tr>
+  <tr><td>速度</td><td><strong>最高 170x 实时</strong></td><td>最高 13x 实时（large-v3）</td></tr>
+  <tr><td>CPU 可用性</td><td><strong>17x 实时，完全可用</strong></td><td>极慢，基本不可用</td></tr>
+  <tr><td>说话人分离</td><td><strong>内置，一个 pipeline</strong></td><td>需要额外的 pyannote 集成</td></tr>
+  <tr><td>情感识别</td><td><strong>内置（SenseVoice）</strong></td><td>不支持</td></tr>
+  <tr><td>中文精度</td><td><strong>显著更高</strong>（专注中文优化）</td><td>一般</td></tr>
+  <tr><td>部署灵活性</td><td>OpenAI API / MCP / WebSocket / vLLM / Docker / Android</td><td>仅 API 或本地推理</td></tr>
+  <tr><td>开源协议</td><td>MIT</td><td>MIT</td></tr>
+</table>
+
+<blockquote><strong>关键结论</strong>：FunASR 的 CPU 模型跑得比 Whisper 的 GPU 还快——这是架构层面的代差优势。</blockquote>
+
+<h3>FunASR vs 云厂商 ASR</h3>
+<table>
+  <tr><th>维度</th><th>FunASR</th><th>云厂商 ASR（阿里云/腾讯云/讯飞）</th></tr>
+  <tr><td>费用</td><td><strong>免费</strong></td><td>$0.006/分钟起</td></tr>
+  <tr><td>数据隐私</td><td><strong>完全本地化</strong></td><td>音频上传到云端</td></tr>
+  <tr><td>定制能力</td><td><strong>开源可改</strong></td><td>有限</td></tr>
+  <tr><td>实时性</td><td>本地推理，无网络延迟</td><td>受网络影响</td></tr>
+</table>
+
+<!-- ============ 第七章 ============ -->
+<h2 id="ch7">第七章 · 入门学习路径</h2>
+
+<div class="step"><span class="step-num">1</span><div><strong>快速体验（10 分钟）</strong><br>用 Colab Quickstart，上传一段音频，浏览器内直接看结果。零安装。</div></div>
+
+<div class="step"><span class="step-num">2</span><div><strong>本地安装（30 分钟）</strong>
+<pre><code>pip install torch torchaudio
+pip install funasr</code></pre>
+<pre><code>from funasr import AutoModel
+model = AutoModel(model="iic/SenseVoiceSmall", device="cpu")
+result = model.generate(input="your_audio.wav")
+print(result)</code></pre></div></div>
+
+<div class="step"><span class="step-num">3</span><div><strong>理解 pipeline（1-2 小时）</strong><br>加入 VAD、标点、说话人分离，理解每个模块的输入输出。</div></div>
+
+<div class="step"><span class="step-num">4</span><div><strong>部署服务（半天）</strong>
+<pre><code>funasr-server --device cuda
+curl http://localhost:8000/v1/audio/transcriptions -F file=@test.wav</code></pre>
+接入 LangChain / Dify 等框架。</div></div>
+
+<div class="step"><span class="step-num">5</span><div><strong>性能调优</strong><br>vLLM 加速（2-3x）、hotword 热词定制、VAD 参数调优。</div></div>
+
+<!-- ============ 第八章 ============ -->
+<h2 id="ch8">第八章 · .github 目录逐文件解析</h2>
+
+<h3 id="ch8-0">8.0 目录总览</h3>
+
+<div class="flow">.github/
+├── workflows/
+│   └── update-api-docs.yml          # 唯一 CI 工作流
+├── ISSUE_TEMPLATE/
+│   ├── config.yaml                  # Issue 模板选择器配置
+│   ├── ask_questions.md             # 提问模板
+│   ├── bug_report.md                # Bug 报告模板
+│   ├── deployment_help.md           # 部署求助模板
+│   ├── error_docs.md                # 文档/笔误报告模板
+│   ├── feature_request.md           # 功能请求模板
+│   ├── migration_benchmark.md       # 迁移基准测试模板
+│   └── showcase.md                  # 应用案例展示模板
+└── PULL_REQUEST_TEMPLATE.md         # PR 模板</div>
+
+<h3 id="ch8-1">8.1 workflows/update-api-docs.yml — 唯一 CI 工作流</h3>
+
+<div class="card">
+<div class="card-title">技术栈选型</div>
+<table>
+  <tr><th>组件</th><th>选型</th><th>说明</th></tr>
+  <tr><td>触发方式</td><td>push 到 main 分支</td><td>仅在核心文件变更时触发</td></tr>
+  <tr><td>路径过滤</td><td>funasr/**/*.py, gen_api_docs.py, training.html, 自身</td><td>精准过滤，避免无意义构建</td></tr>
+  <tr><td>运行环境</td><td>ubuntu-latest</td><td>GitHub Actions 标准 Linux 虚拟环境</td></tr>
+  <tr><td>Checkout</td><td>actions/checkout@v4 + fetch-depth: 0</td><td>拉取完整 Git 历史</td></tr>
+  <tr><td>Python</td><td>actions/setup-python@v5, 3.11</td><td>固定版本保证可重复性</td></tr>
+  <tr><td>部署</td><td>peaceiris/actions-gh-pages@v3</td><td>增量推送到 gh-pages 分支</td></tr>
+  <tr><td>行为</td><td>keep_files: true</td><td>增量更新，不删除已有文件</td></tr>
+</table>
+</div>
+
+<pre><code>name: Update API Documentation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'funasr/**/*.py'
+      - 'scripts/gen_api_docs.py'
+      - 'training.html'
+      - '.github/workflows/update-api-docs.yml'
+jobs:
+  build-api-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate API docs
+        run: python3 scripts/gen_api_docs.py
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages-output
+          publish_branch: gh-pages
+          keep_files: true</code></pre>
+
+<table>
+  <tr><th>代码</th><th>实现的功能</th></tr>
+  <tr><td><code>name: Update API Documentation</code></td><td>给工作流起名，显示在 GitHub Actions 面板和 Badge 上</td></tr>
+  <tr><td><code>branches: [main]</code></td><td><strong>仅限 main 分支</strong>。避免开发中的半成品代码污染线上文档</td></tr>
+  <tr><td><code>paths:</code></td><td><strong>路径过滤器</strong>。只有这些路径下的文件变更时才触发</td></tr>
+  <tr><td><code>fetch-depth: 0</code></td><td>拉取完整 Git 历史。gh-pages 分支与 main 是独立历史线，peaceiris 需要完整历史才能正确计算增量提交</td></tr>
+  <tr><td><code>python-version: '3.11'</code></td><td>固定 Python 3.11。避免 ubuntu-latest 预装版本漂移导致文档生成行为不一致</td></tr>
+  <tr><td><code>keep_files: true</code></td><td>增量更新模式。只覆盖同名文件，保留手动上传的静态资源</td></tr>
+</table>
+
+<h4>路径过滤器的设计意图</h4>
+<table>
+  <tr><th>路径</th><th>为什么监听它</th></tr>
+  <tr><td><code>funasr/**/*.py</code></td><td>核心源码。任何 Python 代码改动可能影响 API 签名</td></tr>
+  <tr><td><code>scripts/gen_api_docs.py</code></td><td>文档生成脚本本身。脚本改了，生成的文档结构可能也会变</td></tr>
+  <tr><td><code>training.html</code></td><td>训练文档模板</td></tr>
+  <tr><td><code>.github/workflows/update-api-docs.yml</code></td><td>工作流自身。工作流逻辑改了需要立即生效</td></tr>
+</table>
+
+<blockquote><strong>关键洞察</strong>：这是整个项目唯一的自动化 CI。它不跑测试、不跑 lint、不做构建——<strong>只做一件事：自动生成并部署 API 文档</strong>。FunASR 的测试需要 GPU + 大模型，不适合 GitHub Actions 免费配额。团队选择将 CI 资源集中在最有社区价值的交付物上——文档的实时更新。</blockquote>
+
+<h4>完整执行链路</h4>
+<div class="flow">开发者 push 代码到 main 分支
+      ↓
+GitHub 检查：变更的文件是否匹配 paths 过滤条件？
+      ↓ 匹配
+拉取完整仓库代码（fetch-depth: 0）
+      ↓
+安装 Python 3.11
+      ↓
+运行 gen_api_docs.py，产出文档到 ./gh-pages-output/
+      ↓
+peaceiris/actions-gh-pages 将产出目录推送到 gh-pages 分支
+      ↓
+GitHub Pages 自动更新网站内容</div>
+
+<!-- --- config.yaml --- -->
+<h3 id="ch8-2">8.2 ISSUE_TEMPLATE/config.yaml — 模板选择器中枢</h3>
+
+<pre><code>blank_issues_enabled: false
+contact_links:
+  - name: FunASR documentation
+    url: https://modelscope.github.io/FunASR/
+    about: Read installation, tutorial, deployment, benchmark, and API docs.
+
+  - name: GitHub Discussions
+    url: https://github.com/modelscope/FunASR/discussions
+    about: Share ideas, showcase usage, and ask open-ended community questions.
+
+  - name: Hugging Face models
+    url: https://huggingface.co/funasr
+    about: Browse FunASR checkpoints on Hugging Face.</code></pre>
+
+<table>
+  <tr><th>代码</th><th>实现的功能</th></tr>
+  <tr><td><code>blank_issues_enabled: false</code></td><td>禁用"空白 Issue"按钮。用户点击 New Issue 时强制进入模板选择页面。<strong>没有人能提交没有结构的 Issue</strong></td></tr>
+  <tr><td><code>contact_links</code></td><td>在模板选择页面底部显示的外部链接列表</td></tr>
+</table>
+
+<h4>三个链接的战略分工</h4>
+<table>
+  <tr><th>链接</th><th>目标</th><th>分流意图</th></tr>
+  <tr><td>官方文档</td><td>安装/教程/部署/API 文档</td><td>"先看文档，里面大概率有答案"</td></tr>
+  <tr><td>GitHub Discussions</td><td>社区讨论区</td><td>开放性问题、想法分享 → 不适合提 Issue 的内容导流</td></tr>
+  <tr><td>Hugging Face 模型</td><td>模型权重下载</td><td>引导用户获取模型文件</td></tr>
+</table>
+
+<blockquote><strong>不设这个分流会怎样？</strong> Issue 区会被"模型在哪下载？""怎么安装？""支持哪些语言？"这类基础问题淹没。</blockquote>
+
+<!-- --- ask_questions.md --- -->
+<h3 id="ch8-3">8.3 ISSUE_TEMPLATE/ask_questions.md — 通用提问</h3>
+
+<pre><code>---
+name: ❓ Questions/Help
+about: Ask for help after checking existing issues and docs
+labels: question, needs triage
+---
+
+## Before asking
+1. Search existing issues
+2. Search the docs
+3. Check the README quick start
+
+## Question
+## Code or command
+## What have you tried?
+## Environment
+- OS:
+- Python version:
+- FunASR version:
+- ModelScope version:
+- PyTorch / torchaudio version:
+- Install method (pip, source, Docker):
+- Device (cuda, cpu, mps):
+- GPU model:
+- CUDA/cuDNN version:
+- Docker image tag, if used:</code></pre>
+
+<table>
+  <tr><th>字段</th><th>实现的功能</th></tr>
+  <tr><td><code>labels: question, needs triage</code></td><td><strong>自动打标签</strong>。<code>needs triage</code> 方便筛选未处理 Issue；<code>question</code> 方便统计分析</td></tr>
+  <tr><td><code>## Before asking</code></td><td><strong>三层过滤机制</strong>：Issue 区 → 文档站 → README</td></tr>
+  <tr><td><code>## Code or command</code></td><td><strong>最关键字段</strong>——空口描述的错误几乎无法诊断</td></tr>
+  <tr><td><code>## What have you tried?</code></td><td>避免维护者建议的方案用户已经试过，节省来回沟通</td></tr>
+  <tr><td><code>## Environment</code></td><td>10 个环境字段，逐条列出所有可能影响诊断结果的变量</td></tr>
+</table>
+
+<h4>10 个环境字段的逐一意图</h4>
+<table>
+  <tr><th>字段</th><th>为什么需要</th><th>典型问题</th></tr>
+  <tr><td>OS</td><td>Windows/macOS/Linux 路径和编码行为不同</td><td>"Linux 正常，Windows 报错"</td></tr>
+  <tr><td>Python version</td><td>3.8~3.12 语法和 API 有差异</td><td>"用了 Python 3.12 的 match 语法"</td></tr>
+  <tr><td>FunASR version</td><td>不同版本的 API 不兼容</td><td>"老版本的参数在新版里改名了"</td></tr>
+  <tr><td>ModelScope version</td><td>模型下载依赖此库</td><td>模型拉不下来往往是对应版本不匹配</td></tr>
+  <tr><td>PyTorch/torchaudio version</td><td>底层依赖 PyTorch</td><td>CUDA 版本和 PyTorch 版本要匹配</td></tr>
+  <tr><td>Install method</td><td>pip/source/Docker 行为不同</td><td>source 安装可能缺少编译步骤</td></tr>
+  <tr><td>Device</td><td>CUDA/CPU/MPS 后端差异巨大</td><td>选了 cuda 但机器没有 GPU</td></tr>
+  <tr><td>GPU model</td><td>不同 GPU 显存和算力不同</td><td>A100 能跑但 V100 OOM</td></tr>
+  <tr><td>CUDA/cuDNN version</td><td>CUDA 版本与 PyTorch 编译版本要一致</td><td>torch.cuda.is_available() = False</td></tr>
+  <tr><td>Docker image tag</td><td>Docker 版本间可能有差异</td><td>不同 Tag 的镜像行为不一致</td></tr>
+</table>
+
+<blockquote><strong>关键工程思想</strong>：不是简单地写"贴一下环境信息"——而是逐条列出所有可能影响诊断结果的变量，用户只需要填空，不会遗漏。</blockquote>
+
+<!-- --- bug_report.md --- -->
+<h3 id="ch8-4">8.4 ISSUE_TEMPLATE/bug_report.md — Bug 报告</h3>
+
+<pre><code>---
+name: 🐛 Bug Report
+about: Submit a reproducible bug report to help us improve FunASR
+labels: bug, needs triage
+---
+
+Steps to reproduce the behavior. Always include the exact command you ran.
+1. Install with: ...
+2. Run: ...
+3. See error: ...
+
+- OS:
+- ...（与 ask_questions 相同的环境字段）
+
+If the audio cannot be shared, please describe:
+- Duration:
+- Sample rate:
+- Format:
+- Language/dialect:
+- Speaker count:
+- Background noise/music:</code></pre>
+
+<table>
+  <tr><th>字段</th><th>实现的功能</th></tr>
+  <tr><td><code>about: Submit a reproducible bug report</code></td><td><code>reproducible</code> 是关键词——明确要求 Bug 必须可复现</td></tr>
+  <tr><td><code>Always include the exact command</code></td><td>强调必须贴<strong>完整命令</strong>，而非模糊描述</td></tr>
+  <tr><td>音频专属字段</td><td>专为 ASR 领域设计——Bug 经常是音频特征引发，而非代码缺陷</td></tr>
+</table>
+
+<h4>音频专属字段的工程意义</h4>
+<table>
+  <tr><th>字段</th><th>涉及的工程问题</th></tr>
+  <tr><td>Duration</td><td>长音频可能触发 OOM 或 VAD 行为异常</td></tr>
+  <tr><td>Sample rate</td><td>模型期望 16kHz，输入 8kHz 会静默失败</td></tr>
+  <tr><td>Format</td><td>MP3 解码依赖 ffmpeg，WAV 直接读，格式差异是常见陷阱</td></tr>
+  <tr><td>Language/dialect</td><td>方言识别一直是 ASR 难点</td></tr>
+  <tr><td>Speaker count</td><td>多人对话是说话人分离的测试重点</td></tr>
+  <tr><td>Background noise</td><td>噪声环境下 VAD 可能失效或误触发</td></tr>
+</table>
+
+<!-- --- deployment_help.md --- -->
+<h3 id="ch8-5">8.5 ISSUE_TEMPLATE/deployment_help.md — 部署求助</h3>
+
+<pre><code>---
+name: 🚀 Deployment Help
+about: Get help with API server, WebSocket, Docker, vLLM, Triton, Android, or agent integration
+labels: deployment, needs triage
+---
+
+## Deployment target
+- OpenAI-compatible API server
+- WebSocket streaming service
+- Docker runtime
+- vLLM acceleration
+- Triton
+- Android / mobile
+- Browser / Web UI
+- MCP / agent integration
+- Other:
+
+## Goal
+## Command or config
+## Error or unexpected behavior
+
+## Environment
+- OS:
+- ...
+- GPU model and memory:
+- Network endpoint / port:</code></pre>
+
+<table>
+  <tr><th>字段</th><th>实现的功能</th></tr>
+  <tr><td><code>about</code></td><td>一次性列举 7 种部署方式，声明支持范围</td></tr>
+  <tr><td><code>## Deployment target</code></td><td><strong>结构化单选题</strong>。用户勾选后，维护者一眼就知道该从哪个文档切入</td></tr>
+  <tr><td><code>GPU model and memory</code></td><td>vLLM 需要大显存，Triton 有显存分配策略</td></tr>
+  <tr><td><code>Network endpoint / port</code></td><td>部署类问题大量涉及端口占用、防火墙、内网穿透</td></tr>
+</table>
+
+<h4>部署目标选项与对应技术栈</h4>
+<table>
+  <tr><th>选项</th><th>对应的技术栈</th></tr>
+  <tr><td>OpenAI-compatible API</td><td>funasr-server + FastAPI + uvicorn</td></tr>
+  <tr><td>WebSocket streaming</td><td>Docker + 流式协议</td></tr>
+  <tr><td>Docker</td><td>官方镜像</td></tr>
+  <tr><td>vLLM acceleration</td><td>vLLM 推理引擎</td></tr>
+  <tr><td>Triton</td><td>NVIDIA Triton Inference Server</td></tr>
+  <tr><td>Android/mobile</td><td>端侧 SDK</td></tr>
+  <tr><td>Browser/Web UI</td><td>Gradio 前端</td></tr>
+  <tr><td>MCP/agent integration</td><td>MCP Server + Claude/Cursor</td></tr>
+</table>
+
+<!-- --- error_docs.md --- -->
+<h3 id="ch8-6">8.6 ISSUE_TEMPLATE/error_docs.md — 文档/笔误</h3>
+
+<pre><code>---
+name: 📚 Documentation/Typos
+about: Report an issue related to documentation or a typo
+labels: documentation, needs triage
+---
+
+For typos and doc fixes, please go ahead and:
+1. Create an issue.
+2. Fix the typo.
+3. Submit a PR.
+Thanks!</code></pre>
+
+<p><strong>这是 8 个模板中最短的，也是最精妙的一个。</strong></p>
+<p>它的设计意图是 <strong>"Good First Issue 入口"</strong>：不要求环境信息、不要求贴代码、不要求复现步骤——直接引导用户修笔误然后提 PR。</p>
+
+<blockquote><strong>为什么重要？</strong> 新手贡献开源项目的最自然起点就是修文档错别字。给这个行为一个正式入口，能显著提升社区参与度。这是社区增长的"漏斗顶端"。</blockquote>
+
+<!-- --- feature_request.md --- -->
+<h3 id="ch8-7">8.7 ISSUE_TEMPLATE/feature_request.md — 功能请求</h3>
+
+<pre><code>---
+name: ✨ Feature Request
+about: Suggest a model, language, runtime, deployment, benchmark, or documentation improvement
+labels: enhancement, needs triage
+---
+
+## Use case
+## Proposed solution
+## Alternatives or workarounds
+## Expected impact
+
+## Willing to contribute?
+- I can submit a PR
+- I can help test
+- I can provide data, logs, or benchmark results</code></pre>
+
+<h4>四字段的产品思维映射</h4>
+<table>
+  <tr><th>字段</th><th>对应产品思维</th></tr>
+  <tr><td>Use case</td><td>"谁在什么场景下遇到了什么问题"——需求来源</td></tr>
+  <tr><td>Proposed solution</td><td>"你希望怎么解决"——方案建议</td></tr>
+  <tr><td>Alternatives</td><td>"现在的替代方案是什么"——判断需求紧迫度</td></tr>
+  <tr><td>Expected impact</td><td>"解决了能带来什么价值"——优先级依据</td></tr>
+</table>
+
+<h4>三种贡献方式的梯度设计</h4>
+<table>
+  <tr><th>选项</th><th>门槛</th><th>社区价值</th></tr>
+  <tr><td>提交 PR</td><td>最高，需要写代码</td><td>直接贡献代码</td></tr>
+  <tr><td>帮助测试</td><td>中等，跑一下即可</td><td>降低维护者测试负担</td></tr>
+  <tr><td>提供数据/日志/Benchmark</td><td>最低，把已有的东西发出来</td><td>真实数据是 ASR 项目最宝贵的资产</td></tr>
+</table>
+
+<blockquote><strong>深刻之处</strong>：即使完全不会写代码，也能通过"提供测试数据"参与进来。这是开源社区激励的经典设计。</blockquote>
+
+<!-- --- migration_benchmark.md --- -->
+<h3 id="ch8-8">8.8 ISSUE_TEMPLATE/migration_benchmark.md — 迁移基准测试</h3>
+
+<p>这是 8 个模板中<strong>最复杂、领域化程度最高</strong>的。</p>
+
+<pre><code>---
+name: 📊 Migration Benchmark Report
+about: Share FunASR results when comparing against Whisper, OpenAI audio APIs, or cloud ASR
+labels: benchmark, showcase, needs triage
+---
+
+Thanks for benchmarking FunASR on your own audio.
+Migration reports help new users decide whether FunASR fits
+their language, domain, hardware, and deployment constraints.
+
+If you need help debugging a failure, please use Bug Report or Deployment Help instead.
+
+- Baseline ASR (Whisper, Whisper large-v3, cloud provider, internal system, other):
+- Baseline runtime or API:
+- Baseline hardware or pricing tier:
+
+- FunASR version:
+- Model(s):
+- Runtime path (Python API, funasr-server, OpenAI API, Docker, WebSocket, vLLM, other):
+- Device, GPU/CPU, CUDA/PyTorch versions:
+- Command or script used:
+
+- Number of files:
+- Total audio duration:
+- Language(s)/dialect(s):
+- Domain (meeting, call-center, subtitle, lecture, media, noisy field audio, other):
+- Speaker count range:
+- Sample rate / format:
+- Can any sample be shared publicly? yes/no
+
+- Model download / warmup time:
+- Steady-state throughput:
+- Memory usage:
+- Failed files or error rate:
+- Deployment blockers:
+
+## What should FunASR improve next?</code></pre>
+
+<h4>数据集特征描述的工程意义</h4>
+<table>
+  <tr><th>字段</th><th>工程意义</th></tr>
+  <tr><td>Number of files / Duration</td><td>数据规模影响结论的可信度</td></tr>
+  <tr><td>Language/dialect</td><td>不同语言精度差异大</td></tr>
+  <tr><td>Domain</td><td><strong>最关键字段之一</strong>——不同领域的噪声分布、说话风格完全不同</td></tr>
+  <tr><td>Speaker count</td><td>多人场景是说话人分离的测试重点</td></tr>
+  <tr><td>Can sample be shared?</td><td>如果可以公开，其他用户也能验证</td></tr>
+</table>
+
+<h4>性能指标的工程意义</h4>
+<table>
+  <tr><th>指标</th><th>为什么需要</th></tr>
+  <tr><td>Warmup time</td><td>冷启动对实时服务至关重要</td></tr>
+  <tr><td>Steady-state throughput</td><td>衡量持续处理能力</td></tr>
+  <tr><td>Memory usage</td><td>决定最低硬件要求</td></tr>
+  <tr><td>Failed files / error rate</td><td>衡量鲁棒性</td></tr>
+  <tr><td>Deployment blockers</td><td>帮助改进部署文档和工具</td></tr>
+</table>
+
+<blockquote><strong>设计核心</strong>：这个模板不仅收集基准数据，更通过结构化的对比字段，引导用户在真实场景下对 FunASR 做出知情的评估决策。同时为 FunASR 团队提供宝贵的真实世界性能锚点和优先级指引。</blockquote>
+
+<!-- --- showcase.md --- -->
+<h3 id="ch8-9">8.9 ISSUE_TEMPLATE/showcase.md — 应用案例展示</h3>
+
+<pre><code>---
+name: 🎤 Showcase / Production Story
+about: Share how you use FunASR in a demo, product, benchmark, research project, or internal workflow
+labels: showcase, needs triage
+---
+
+- FunASR version:
+- Model(s):
+- Device:
+- Runtime path:
+- Audio language/domain:
+- Approximate audio duration or traffic:</code></pre>
+
+<h4>与 migration_benchmark 的区别</h4>
+<table>
+  <tr><th>维度</th><th>showcase</th><th>migration_benchmark</th></tr>
+  <tr><td>目的</td><td>定性案例收集</td><td>定量对比数据</td></tr>
+  <tr><td>对照组</td><td>不需要</td><td>需要</td></tr>
+  <tr><td>性能指标</td><td>不需要</td><td>需要（吞吐/内存/失败率）</td></tr>
+  <tr><td>填写负担</td><td>轻</td><td>重</td></tr>
+</table>
+
+<blockquote><strong>价值</strong>：收集到的 Showcase 可整理成 Use Case 展示页面，帮助潜在用户做决策，也是项目申请资源时的有力材料。</blockquote>
+
+<!-- --- PULL_REQUEST_TEMPLATE.md --- -->
+<h3 id="ch8-10">8.10 PULL_REQUEST_TEMPLATE.md — 代码贡献入口</h3>
+
+<pre><code>## Summary
+## Type of change
+- Bug fix
+- Documentation
+- Example or demo
+- Runtime or deployment
+- Benchmark or evaluation
+- Model/training change
+
+## Validation
+- python -m compileall funasr examples tests
+- Docs or links checked
+- Runtime/deployment command tested
+
+## User impact
+## Notes for reviewers</code></pre>
+
+<h4>Type of change — 6 种变更类型与 Issue 模板的对应</h4>
+<table>
+  <tr><th>PR 类型</th><th>对应的 Issue 模板</th><th>说明</th></tr>
+  <tr><td>Bug fix</td><td>bug_report</td><td>Issue → PR 自然衔接</td></tr>
+  <tr><td>Documentation</td><td>error_docs</td><td>文档修正的低门槛贡献</td></tr>
+  <tr><td>Example or demo</td><td>—</td><td>示例和 Demo</td></tr>
+  <tr><td>Runtime or deployment</td><td>deployment_help</td><td>部署相关改动</td></tr>
+  <tr><td>Benchmark or evaluation</td><td>migration_benchmark</td><td>基准测试改动</td></tr>
+  <tr><td>Model/training change</td><td>—</td><td>模型或训练相关</td></tr>
+</table>
+
+<blockquote>这种对称性让 Issue → PR 的流转自然衔接。</blockquote>
+
+<h4>Validation — 三条验证线</h4>
+<table>
+  <tr><th>验证项</th><th>具体做法</th><th>防什么</th></tr>
+  <tr><td><code>python -m compileall funasr examples tests</code></td><td>对三个核心目录做<strong>语法编译检查</strong></td><td>语法错误、import 路径错误。比跑单元测试快得多</td></tr>
+  <tr><td>Docs or links checked</td><td>检查改动的文档链接</td><td>死链、格式错乱</td></tr>
+  <tr><td>Runtime/deployment command tested</td><td><strong>实际运行</strong>部署命令</td><td>API 改了但文档里的命令没更新</td></tr>
+</table>
+
+<p><strong><code>compileall</code> 而非跑完整测试的原因</strong>：FunASR 的测试需要 GPU + 大模型文件。但 <code>compileall</code> 只需要 Python 标准库，零依赖，秒级完成，能拦截 80% 的低级错误（拼写错误、import 路径、缩进问题）。</p>
+
+<h4>User impact — 一个偏向产品的字段</h4>
+<p>强制 PR 作者思考："我的技术改动对最终用户有什么影响？"</p>
+<table>
+  <tr><th>PR 内容</th><th>User impact</th></tr>
+  <tr><td>修复 VAD 边界 bug</td><td>长会议录音不再出现末尾被截断的问题</td></tr>
+  <tr><td>新增 <code>language</code> 参数</td><td>支持指定识别语言，多语言场景识别率提升</td></tr>
+  <tr><td>重构内存分配</td><td>无用户可见影响</td></tr>
+</table>
+
+<!-- ============ 附录 ============ -->
+<hr class="divider">
+<h2 id="appendix">附录 · 10 个文件的协作关系</h2>
+
+<div class="flow">                    ┌──────────────────────┐
+                    │   config.yaml        │
+                    │   （模板选择器中枢）   │
+                    └──────┬───────────────┘
+                           │ 路由到 7 个 Issue 模板
+      ┌────────────────────┼────────────────────────────┐
+      │                    │                            │
+  ask_questions       bug_report              deployment_help
+  （使用问题）         （Bug 报告）             （部署求助）
+      │                    │                            │
+  error_docs          feature_request       migration_benchmark
+  （文档修正）         （功能请求）            （迁移对比）
+      │                    │
+  showcase            PULL_REQUEST_TEMPLATE
+  （应用案例）           （代码贡献入口）
+                            │
+                    update-api-docs.yml
+                    （自动文档部署）</div>
+
+<h3>四条核心设计原则</h3>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">入口控制</div>
+    <p><code>config.yaml</code> 禁用空白 Issue + 三个外部链接分流基础问题。从源头保证 Issue 区的信噪比。</p>
+  </div>
+  <div class="card">
+    <div class="card-title">领域特化</div>
+    <p>每个模板收集的字段精准匹配问题类型：音频属性给 Bug、端口给部署、对比数据给迁移。</p>
+  </div>
+  <div class="card">
+    <div class="card-title">贡献梯度</div>
+    <p>文档修正（最低门槛）→ 功能建议/案例展示（中）→ 代码 PR（高）。覆盖不同能力的贡献者。</p>
+  </div>
+  <div class="card">
+    <div class="card-title">自动化闭环</div>
+    <p>PR 合并后 <code>update-api-docs.yml</code> 自动更新文档，用户永远看到最新版。</p>
+  </div>
+</div>
+
+<hr class="divider">
+
+<h2>速查总结</h2>
+
+<table>
+  <tr><th>你想要什么</th><th>FunASR 给你的答案</th></tr>
+  <tr><td>最快的 ASR</td><td>SenseVoice-Small，170x 实时</td></tr>
+  <tr><td>最高精度的 ASR</td><td>Fun-ASR-Nano（LLM 驱动）</td></tr>
+  <tr><td>中文最佳效果</td><td>Paraformer-zh + ct-punc + cam++</td></tr>
+  <tr><td>多语言覆盖</td><td>Qwen3-ASR，52 语言</td></tr>
+  <tr><td>实时流式转写</td><td>Paraformer-streaming + WebSocket</td></tr>
+  <tr><td>情感分析</td><td>SenseVoice + emtion2vec</td></tr>
+  <tr><td>会议纪要</td><td>VAD + ASR + 说话人 + 标点，一键完成</td></tr>
+  <tr><td>接入 AI Agent</td><td>OpenAI 兼容 API / MCP Server</td></tr>
+  <tr><td>端侧部署</td><td>Android SDK / CPU 17x 实时</td></tr>
+</table>
+
+<p style="margin-top: 48px; color: var(--text-secondary); font-size: 13px;">
+  文档生成时间：2026-06-14 · 源仓库：<a href="https://github.com/modelscope/FunASR">github.com/modelscope/FunASR</a>
+</p>
+
+</main>
+</body>
+</html>
